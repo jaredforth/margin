@@ -1,7 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <rect x="64" y="64" width="896" height="896" rx="200" fill="#1c1c1e"/>
-  <rect x="262" y="308" width="460" height="56" rx="28" fill="#fff" opacity=".22"/>
-  <rect x="262" y="456" width="340" height="64" rx="32" fill="#fff"/>
-  <rect x="632" y="424" width="30" height="128" rx="15" fill="#ff9f0a"/>
-  <rect x="262" y="620" width="300" height="56" rx="28" fill="#fff" opacity=".22"/>
+  <!-- hand-drawn margin rule -->
+  <path d="M300 150 Q294 400 303 600 T297 878" fill="none" stroke="#ff7a45" stroke-width="14" stroke-linecap="round"/>
+  <!-- handwritten lines: irregular letters and ascender loops -->
+  <g fill="none" stroke="#f2ecdf" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M382 360 c8 -30 26 -34 30 -6 c2 20 -4 34 -2 30 c10 -50 30 -76 44 -58 c10 14 -14 50 -4 56 c14 6 22 -26 40 -28 c16 -2 14 26 28 24 c16 -2 22 -34 40 -34 c14 0 12 24 30 22 c10 -2 16 -10 26 -16 c10 -40 28 -70 42 -52 c10 14 -8 44 2 50 c16 6 24 -24 40 -24 c14 0 14 18 30 14"/>
+    <path d="M384 520 c14 -26 32 -22 34 2 c2 22 -10 30 -2 30 c18 0 28 -36 46 -34 c14 2 4 30 20 32 c20 2 30 -50 48 -64 c14 -12 10 26 4 48 c-4 18 8 20 22 6 c16 -16 22 -18 36 -12 c10 4 6 18 20 16 c12 -2 20 -22 36 -22 c14 0 12 22 28 20"/>
+    <path d="M388 680 c12 -28 30 -26 32 -2 c1 18 -8 28 0 28 c16 0 26 -34 44 -32 c14 2 8 28 24 28 c18 0 22 -22 36 -24 c14 -2 16 18 32 16 c12 -2 18 -14 28 -16"/>
+  </g>
 </svg>

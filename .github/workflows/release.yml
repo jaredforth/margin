@@ -1,0 +1,17 @@
+# Push a tag like v0.1.0 to build Margin.app and attach it to a GitHub release.
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./build.sh
+      - run: ditto -c -k --keepParent Margin.app Margin.zip
+      - run: gh release create "$GITHUB_REF_NAME" Margin.zip --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

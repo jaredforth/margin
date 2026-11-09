@@ -1,10 +1,12 @@
 #!/bin/sh
-# Builds MDEditor.app (no Xcode needed). Run: ./build.sh && open MDEditor.app
+# Builds Margin.app (no Xcode needed). Run: ./build.sh && open Margin.app
 set -e
 cd "$(dirname "$0")"
-rm -rf MDEditor.app
-mkdir -p MDEditor.app/Contents/MacOS
-swiftc -O -parse-as-library Sources/MDEditor.swift -o MDEditor.app/Contents/MacOS/MDEditor
-cp Info.plist MDEditor.app/Contents/
-mkdir -p MDEditor.app/Contents/Resources
-cp assets/AppIcon.icns MDEditor.app/Contents/Resources/
+rm -rf Margin.app
+mkdir -p Margin.app/Contents/MacOS
+for a in arm64 x86_64; do swiftc -O -parse-as-library -target $a-apple-macos14.0 Sources/Margin.swift -o "$TMPDIR/Margin-$a"; done
+lipo -create "$TMPDIR"/Margin-arm64 "$TMPDIR"/Margin-x86_64 -output Margin.app/Contents/MacOS/Margin
+cp Info.plist Margin.app/Contents/
+mkdir -p Margin.app/Contents/Resources
+cp assets/AppIcon.icns Margin.app/Contents/Resources/
+codesign --force --deep -s - Margin.app # ad-hoc: no Developer ID, so Gatekeeper still prompts on first open

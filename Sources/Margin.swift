@@ -17,7 +17,7 @@ struct MarkdownDoc: FileDocument {
     }
 }
 
-// NSTextView filling the window width (48pt margins) with optional typewriter scrolling
+// NSTextView with a centered 720pt column (48pt minimum side margins) and optional typewriter scrolling
 // (caret line stays vertically centered).
 final class TextView: NSTextView {
     var typewriter = false { didSet { updateInsets(); centerCaret() } }
@@ -26,7 +26,7 @@ final class TextView: NSTextView {
 
     func updateInsets() {
         guard let sv = enclosingScrollView else { return }
-        let inset = NSSize(width: 48,
+        let inset = NSSize(width: max(48, (sv.contentSize.width - 720) / 2),
                            height: typewriter ? sv.contentSize.height / 2 : 28)
         if textContainerInset != inset { textContainerInset = inset }
     }
@@ -134,11 +134,15 @@ struct Editor: View {
     }
 }
 
-@main struct MDEditor: App {
+// Square window, 90% of the screen's usable height.
+let side = (NSScreen.main?.visibleFrame.height ?? 900) * 0.9
+
+@main struct Margin: App {
     @AppStorage("typewriter") private var typewriter = false
 
     var body: some Scene {
         DocumentGroup(newDocument: MarkdownDoc()) { Editor(doc: $0.$document) }
+            .defaultSize(width: side, height: side)
             .commands {
                 CommandGroup(after: .toolbar) {
                     Toggle("Typewriter Mode", isOn: $typewriter)
