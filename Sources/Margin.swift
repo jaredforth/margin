@@ -24,6 +24,36 @@ final class TextView: NSTextView {
 
     override func setFrameSize(_ s: NSSize) { super.setFrameSize(s); updateInsets() }
 
+    // Live markdown styling: attributes only, the text itself is never touched.
+    // ponytail: restyles the whole document per keystroke, fine for notes, switch to edited-paragraph-only for huge files.
+    func highlight() {
+        guard let ts = textStorage else { return }
+        let base = NSFont(name: "Menlo", size: 16)!
+        let fm = NSFontManager.shared
+        let bold = fm.convert(base, toHaveTrait: .boldFontMask)
+        let italic = fm.convert(base, toHaveTrait: .italicFontMask)
+        let faint = NSColor.secondaryLabelColor
+        let rules: [(String, [NSAttributedString.Key: Any])] = [
+            ("^#{1,6}[ \\t].*$", [.font: fm.convert(bold, toSize: 20)]),
+            ("\\*\\*[^*\\n]+\\*\\*|__[^_\\n]+__", [.font: bold]),
+            ("(?<![*\\w])[*_][^*_\\n]+[*_](?!\\w)", [.font: italic]),
+            ("\\[[^\\]\\n]+\\]\\([^)\\n]+\\)", [.foregroundColor: NSColor.linkColor]),
+            ("`[^`\\n]+`", [.foregroundColor: faint, .backgroundColor: NSColor.quaternaryLabelColor]),
+            ("^```[\\s\\S]*?^```", [.foregroundColor: faint]),
+            ("^>.*$", [.foregroundColor: faint]),
+        ]
+        let all = NSRange(location: 0, length: ts.length)
+        ts.beginEditing()
+        ts.setAttributes([.font: base, .paragraphStyle: defaultParagraphStyle as Any, .foregroundColor: NSColor.textColor], range: all)
+        for (pattern, attrs) in rules {
+            let re = try! NSRegularExpression(pattern: pattern, options: .anchorsMatchLines)
+            re.enumerateMatches(in: ts.string, range: all) { m, _, _ in
+                if let r = m?.range { ts.addAttributes(attrs, range: r) }
+            }
+        }
+        ts.endEditing()
+    }
+
     func updateInsets() {
         guard let sv = enclosingScrollView else { return }
         let inset = NSSize(width: max(48, (sv.contentSize.width - 720) / 2),
@@ -69,6 +99,7 @@ struct EditorView: NSViewRepresentable {
         tv.isRichText = false
         tv.allowsUndo = true
         tv.usesFindBar = true
+        tv.isContinuousSpellCheckingEnabled = true
         tv.isAutomaticQuoteSubstitutionEnabled = false // keep markdown/code characters literal
         tv.isAutomaticDashSubstitutionEnabled = false
         tv.isAutomaticTextReplacementEnabled = false
@@ -83,7 +114,7 @@ struct EditorView: NSViewRepresentable {
     func updateNSView(_ sv: NSScrollView, context: Context) {
         context.coordinator.parent = self
         guard let tv = sv.documentView as? TextView else { return }
-        if tv.string != text { tv.string = text }
+        if tv.string != text { tv.string = text; tv.highlight() }
         tv.typewriter = typewriter
     }
 
@@ -93,6 +124,7 @@ struct EditorView: NSViewRepresentable {
         func textDidChange(_ n: Notification) {
             guard let tv = n.object as? TextView else { return }
             parent.text = tv.string
+            tv.highlight()
             tv.centerCaret()
         }
         func textViewDidChangeSelection(_ n: Notification) { (n.object as? TextView)?.centerCaret() }
