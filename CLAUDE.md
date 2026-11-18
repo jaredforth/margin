@@ -8,7 +8,7 @@ Update this file in the same change whenever you add or change commands, structu
 
 Minimal, distraction-free macOS markdown editor, open source under GPL-3.0-or-later. SwiftUI `DocumentGroup` wrapping an `NSTextView`: plain-text editing, no preview, no toolbar, hidden title bar, centered 720pt text column (margins grow with the window, 48pt minimum), opens as a square window at 90% of screen height (`.defaultSize`). Open/save/autosave/recents come free from `DocumentGroup`.
 
-Features: word count (bottom-right, faint) and typewriter mode (View menu, `⇧⌘T`, persisted via `@AppStorage("typewriter")`; keeps the caret line vertically centered by padding the text view with half the window height and scrolling on selection change).
+Features: continuous spell check (`isContinuousSpellCheckingEnabled`); live markdown styling (`TextView.highlight()`: regex rules for headings, bold, italic, links, inline/fenced code, quotes; attributes only, markers stay visible, reruns on every edit); word count (bottom-right, faint) and typewriter mode (View menu, `⇧⌘T`, persisted via `@AppStorage("typewriter")`; keeps the caret line vertically centered by padding the text view with half the window height and scrolling on selection change).
 
 - `Sources/Margin.swift` — the whole app (document type, `TextView`, `EditorView`, chromeless window hook, `Editor`, `App`).
 - `Info.plist` — registers the app as a Markdown editor, sets the icon.
