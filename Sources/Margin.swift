@@ -21,6 +21,7 @@ struct MarkdownDoc: FileDocument {
 // (caret line stays vertically centered).
 final class TextView: NSTextView {
     var typewriter = false { didSet { updateInsets(); centerCaret() } }
+    var collapse = false { didSet { if collapse != oldValue { highlight() } } }
 
     override func setFrameSize(_ s: NSSize) { super.setFrameSize(s); updateInsets() }
 
@@ -51,6 +52,15 @@ final class TextView: NSTextView {
                 if let r = m?.range { ts.addAttributes(attrs, range: r) }
             }
         }
+        if collapse { // fold frontmatter and shortcodes to ~zero height; text untouched
+            let tiny = NSMutableParagraphStyle(); tiny.maximumLineHeight = 0.1; tiny.lineSpacing = 0; tiny.paragraphSpacing = 0
+            let hide: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 0.1), .foregroundColor: NSColor.clear, .paragraphStyle: tiny]
+            for pattern in ["\\A(\\+\\+\\+|---)\\n[\\s\\S]*?\\n\\1\\n?", "\\{\\{[\\s\\S]*?\\}\\}\\n?", "\\{%[\\s\\S]*?%\\}\\n?"] {
+                try! NSRegularExpression(pattern: pattern).enumerateMatches(in: ts.string, range: all) { m, _, _ in
+                    if let r = m?.range { ts.addAttributes(hide, range: r) }
+                }
+            }
+        }
         ts.endEditing()
     }
 
@@ -79,6 +89,7 @@ final class TextView: NSTextView {
 struct EditorView: NSViewRepresentable {
     @Binding var text: String
     var typewriter: Bool
+    var collapse: Bool
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -115,6 +126,7 @@ struct EditorView: NSViewRepresentable {
         context.coordinator.parent = self
         guard let tv = sv.documentView as? TextView else { return }
         if tv.string != text { tv.string = text; tv.highlight() }
+        tv.collapse = collapse
         tv.typewriter = typewriter
     }
 
@@ -149,10 +161,11 @@ struct Chromeless: NSViewRepresentable {
 struct Editor: View {
     @Binding var doc: MarkdownDoc
     @AppStorage("typewriter") private var typewriter = false
+    @AppStorage("collapse") private var collapse = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            EditorView(text: $doc.text, typewriter: typewriter)
+            EditorView(text: $doc.text, typewriter: typewriter, collapse: collapse)
             let words = doc.text.split(whereSeparator: \.isWhitespace).count
             Text("\(words) \(words == 1 ? "word" : "words")")
                 .font(.caption).monospacedDigit()
@@ -171,6 +184,7 @@ let side = (NSScreen.main?.visibleFrame.height ?? 900) * 0.9
 
 @main struct Margin: App {
     @AppStorage("typewriter") private var typewriter = false
+    @AppStorage("collapse") private var collapse = false
 
     var body: some Scene {
         DocumentGroup(newDocument: MarkdownDoc()) { Editor(doc: $0.$document) }
@@ -179,6 +193,8 @@ let side = (NSScreen.main?.visibleFrame.height ?? 900) * 0.9
                 CommandGroup(after: .toolbar) {
                     Toggle("Typewriter Mode", isOn: $typewriter)
                         .keyboardShortcut("t", modifiers: [.command, .shift])
+                    Toggle("Collapse Metadata", isOn: $collapse)
+                        .keyboardShortcut("m", modifiers: [.command, .shift])
                 }
             }
     }
